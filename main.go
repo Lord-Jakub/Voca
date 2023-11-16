@@ -418,7 +418,7 @@ func interpret(tokens map[int]string) {
 			for !strings.HasPrefix(tokens[i], "TEXT:") {
 				i++
 			}
-
+			filename := strings.TrimPrefix(tokens[i], "TEXT:")
 			// Get the file path and read the content of the file
 			file_path := strings.TrimPrefix(tokens[i], "TEXT:") + ".v"
 			data, _ := os.ReadFile(file_path)
@@ -433,17 +433,18 @@ func interpret(tokens map[int]string) {
 			for n < len(in.tokens) {
 				// Check if the token indicates the start of a function in the imported file
 				if in.tokens[n] == "KEYWORD:func" {
+					// Initialize variables for function code extraction
 					i2 := 0
-					i3 := i
-					// Collect function parameters until an opening brace is encountered
+					i3 := n
+
 					for in.tokens[i3] != "OP_B" {
 						i3++
 					}
 					i3++
 					i4 := 0
 					for in.tokens[i3] != "CL_B" {
-						// Check if the parameter has string prefix and add it to the function code
-						if strings.HasPrefix(tokens[i3], "STRING:") {
+
+						if strings.HasPrefix(in.tokens[i3], "STRING:") {
 							funcode[i4] = "VAR:" + strings.TrimPrefix(in.tokens[i3], "STRING:")
 							i4++
 						}
@@ -452,19 +453,18 @@ func interpret(tokens map[int]string) {
 					}
 
 					// Extract the function code using the GetCode function
-					funcode2, i22 := GetCode(in.tokens, i)
+					funcode2, i22 := GetCode(in.tokens, n)
 					n2 := 0
 					// Add the function code to the map
 					for n2 < len(funcode2) {
 						funcode[len(funcode)] = funcode2[n2]
 						n2++
 					}
-					i2 += i22
 
-					// Create a unique function name: filename.functionname
-					fname := strings.TrimPrefix(tokens[i], "TEXT:") + "." + getname(in.tokens, n)
+					// Update indices and store the function code with its name
+					i2 += i22
+					fname := filename + "." + getname(in.tokens, i)
 					n = i2
-					// Store the function code with the unique name
 					fun[fname] = funcode
 				}
 
@@ -687,8 +687,14 @@ func main() {
 	i := Interpret{
 		KeyWords: []string{"print", "if", "var", "func", "while", "import", "return"},
 	}
-
-	file_path := "code.v"
+	file_path := ""
+	//run if args exist
+	if len(os.Args) > 1 {
+		//get file path
+		file_path = os.Args[1]
+	} else {
+		file_path = "main.v"
+	}
 
 	data, _ := os.ReadFile(file_path)
 
