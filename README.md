@@ -1,7 +1,7 @@
 # Voca
 Voca is a simple programming language, written in Go, which I am currently working on. The purpose of the project is to create a language that's easy to understand and write for a beginner (and I'm mainly learning Go on this project).
 
-**Features that are currently implemented:**
+**TODO:**
  - [x] Creating and calling functions
  - [x] Parameters in functions
  - [x] A function can return a value
@@ -9,8 +9,6 @@ Voca is a simple programming language, written in Go, which I am currently worki
  - [x] Print() function 
  - [x] If and While
  - [x] Import other files written in Voce
-
- **Functions that are not yet implemented, but are planned:**
  - [ ] String concatenation
  - [ ] Several simple libraries (e.g., library for advanced math
        functions, etc.)
