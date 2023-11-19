@@ -5,6 +5,7 @@ import (
 	"Voca/lib"
 	"Voca/num"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"unicode"
@@ -420,7 +421,12 @@ func interpret(tokens map[int]string) {
 			}
 			filename := strings.TrimPrefix(tokens[i], "TEXT:")
 			// Get the file path and read the content of the file
-			file_path := strings.TrimPrefix(tokens[i], "TEXT:") + ".v"
+			executablePath, err := os.Executable()
+			if err != nil {
+				lib.Print("Nelze získat cestu k spustitelnému souboru:" + err.Error())
+				return
+			}
+			file_path := filepath.Dir(executablePath) + "/" + "libs/" + strings.TrimPrefix(tokens[i], "TEXT:") + ".v"
 			data, _ := os.ReadFile(file_path)
 
 			// Replace line endings and tokenize the content
@@ -677,9 +683,6 @@ func (c *code) Code(tokens map[int]string, fun map[string]map[int]string) string
 		i++
 	}
 	return ""
-	/*for k := range c.vars {
-		delete(c.vars, k)
-	}*/
 }
 
 func main() {
@@ -687,6 +690,7 @@ func main() {
 	i := Interpret{
 		KeyWords: []string{"print", "if", "var", "func", "while", "import", "return"},
 	}
+
 	file_path := ""
 	//run if args exist
 	if len(os.Args) > 1 {
@@ -702,12 +706,4 @@ func main() {
 	input = strings.Replace(input, "\\r\\n", "\\n", -1)
 	i.lexer(input)
 	interpret(i.tokens)
-	/*n := 0
-	code := i.tokens
-	for n < len(code) {
-		lib.Print(code[n])
-		n++
-	}
-	res, _ := num.Evaluate(i.tokens)
-	lib.Print(res)*/
 }
