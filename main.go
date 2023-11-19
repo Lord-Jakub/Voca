@@ -690,20 +690,42 @@ func main() {
 	i := Interpret{
 		KeyWords: []string{"print", "if", "var", "func", "while", "import", "return"},
 	}
-
-	file_path := ""
-	//run if args exist
 	if len(os.Args) > 1 {
-		//get file path
-		file_path = os.Args[1]
+		if os.Args[1] == "get" {
+			//get if args exist
+			if len(os.Args) > 2 {
+				//get file path
+				executablePath, err := os.Executable()
+				if err != nil {
+					lib.Print("Nelze získat cestu k spustitelnému souboru:" + err.Error())
+					return
+				}
+				file_name, _ := lib.ExtractFileName(os.Args[2])
+				file_path := filepath.Dir(executablePath) + "/" + "libs/" + file_name
+				//get urlr
+				url := os.Args[2]
+				//download file
+				lib.DownloadFile(file_path, url)
+			} else {
+				lib.Print("Nesprávné použití příkazu get")
+			}
+		}
+
 	} else {
-		file_path = "main.v"
+		file_path := ""
+		//run if args exist
+		if len(os.Args) > 2 {
+			//get file path
+			file_path = os.Args[1]
+		} else {
+			file_path = "main.v"
+		}
+
+		data, _ := os.ReadFile(file_path)
+
+		input := string(data)
+		input = strings.Replace(input, "\\r\\n", "\\n", -1)
+		i.lexer(input)
+		interpret(i.tokens)
 	}
-
-	data, _ := os.ReadFile(file_path)
-
-	input := string(data)
-	input = strings.Replace(input, "\\r\\n", "\\n", -1)
-	i.lexer(input)
-	interpret(i.tokens)
 }
