@@ -14,7 +14,7 @@ import (
 	"net/url"
 	"path"
 
-	"github.com/cheggaaa/pb/v3"
+	"github.com/schollz/progressbar/v3"
 )
 
 func Print(s interface{}) {
@@ -51,54 +51,21 @@ func Contains(s string, array []string) bool {
 	return false
 }
 
-type progressBarWriter struct {
-	bar *pb.ProgressBar
-}
-
-func (pw *progressBarWriter) Write(p []byte) (int, error) {
-	n := len(p)
-	pw.bar.Add(n)
-	return n, nil
-}
-
 // from ChatGPT
-func DownloadFile(filepath string, url string) (err error) {
-	// Create the file
-	out, err := os.Create(filepath)
-	if err != nil {
-		return err
-	}
-	defer out.Close()
-
-	// Get the data
-	resp, err := http.Get(url)
-	if err != nil {
-		return err
-	}
+func Download(destinationPath, downloadUrl string) error {
+	tempDestinationPath := destinationPath + ".tmp"
+	req, _ := http.NewRequest("GET", downloadUrl, nil)
+	resp, _ := http.DefaultClient.Do(req)
 	defer resp.Body.Close()
 
-	// Check server response
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("bad status: %s", resp.Status)
-	}
+	f, _ := os.OpenFile(tempDestinationPath, os.O_CREATE|os.O_WRONLY, 0644)
 
-	// Create progress bar
-	fileSize, _ := strconv.Atoi(resp.Header.Get("Content-Length"))
-	bar := pb.Full.Start(fileSize)
-	bar.SetWidth(80)
-
-	// Create multi writer
-	writer := io.MultiWriter(out, &progressBarWriter{bar: bar})
-
-	// Write the body to file with progress
-	_, err = io.Copy(writer, resp.Body)
-	if err != nil {
-		return err
-	}
-
-	// Finish progress bar
-	bar.Finish()
-
+	bar := progressbar.DefaultBytes(
+		resp.ContentLength,
+		"downloading",
+	)
+	io.Copy(io.MultiWriter(f, bar), resp.Body)
+	os.Rename(tempDestinationPath, destinationPath)
 	return nil
 }
 

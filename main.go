@@ -705,7 +705,7 @@ func main() {
 				//get urlr
 				url := os.Args[2]
 				//download file
-				lib.DownloadFile(file_path, url)
+				lib.Download(file_path, url)
 			} else {
 				lib.Print("Nesprávné použití příkazu get")
 			}
@@ -718,7 +718,8 @@ func main() {
 			//get file path
 			file_path = os.Args[1]
 		} else {
-			file_path = "main.v"
+			cur_dir, _ := os.Getwd()
+			file_path = cur_dir + "/main.v"
 		}
 
 		data, _ := os.ReadFile(file_path)
