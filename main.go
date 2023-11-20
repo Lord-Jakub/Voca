@@ -772,15 +772,6 @@ func (c *code) Code(tokens []string, fun map[string][]string) string {
 			if tokens[i] == "WHITESPACE" {
 
 			} else if tokens[i] == "NEWLINE" {
-
-			} else if strings.HasPrefix(tokens[i], "VAR:") {
-
-			} else if strings.HasPrefix(tokens[i], "INT:") {
-
-			} else if tokens[i] == "OP_B" {
-
-			} else if tokens[i] == "COM" {
-			} else if tokens[i] == "CL_B" {
 			} else {
 				lib.Print("unknown keyword")
 			}
