@@ -17,6 +17,7 @@ import (
 	"github.com/schollz/progressbar/v3"
 )
 
+// Print - print value
 func Print(s interface{}) {
 	os.Setenv("LC_ALL", "cs_CZ.UTF-8")
 	switch value := s.(type) {
@@ -26,15 +27,15 @@ func Print(s interface{}) {
 		fmt.Println(value)
 
 	case int:
-		// Převedení int na string
+		// Parase int to string
 		strValue := strconv.Itoa(value)
-		// Zde zpracuj string
 		fmt.Println(strValue)
 	default:
 		fmt.Println("Nerozpoznaný typ:", value)
 	}
 }
 
+// Read user input, return string
 func Read() string {
 	reader := bufio.NewReader(os.Stdin)
 	s, _ := reader.ReadString('\n')

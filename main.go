@@ -4,6 +4,7 @@ package main
 import (
 	"Voca/lib"
 	"Voca/num"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -185,6 +186,7 @@ func getvalue(tokens map[int]string, i int, vars map[string]string, fun map[stri
 			if strings.HasPrefix(tokens[i], "STRING:") {
 				token := tokens[i]
 				token = strings.TrimPrefix(token, "STRING:")
+
 				if value, exists := vars[token]; exists {
 					if intValue, isInt := strconv.Atoi(value); isInt == nil {
 						tokens[i] = "INT:" + strconv.Itoa(intValue)
@@ -292,6 +294,37 @@ func getvalue(tokens map[int]string, i int, vars map[string]string, fun map[stri
 			tokens[i] = strings.TrimPrefix(tokens[i], "STRING:")
 			if _, exists := vars[tokens[i]]; exists {
 				return vars[tokens[i]], i
+			} else if tokens[i] == "Random" {
+				min := 0
+				max := 0
+				for tokens[i] != "OP_B" {
+					i++
+				}
+				i++
+				for tokens[i] != "COM" {
+					if strings.HasPrefix(tokens[i], "INT:") {
+						tokens[i] = strings.TrimPrefix(tokens[i], "INT:")
+						//convert to int
+						min, _ = strconv.Atoi(tokens[i])
+					}
+					i++
+				}
+				for tokens[i] != "CL_B" {
+					if strings.HasPrefix(tokens[i], "INT:") {
+						tokens[i] = strings.TrimPrefix(tokens[i], "INT:")
+						//convert to int
+						max, _ = strconv.Atoi(tokens[i])
+					}
+					i++
+				}
+
+				randomNumber := rand.Intn(max+1-min) + min
+
+				return strconv.Itoa(randomNumber), i
+			} else if tokens[i] == "Read" {
+				i++
+				i++
+				return lib.Read(), i
 			}
 		} else {
 		}
