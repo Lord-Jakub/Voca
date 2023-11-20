@@ -92,7 +92,7 @@ func (i *Interpret) lexer(input string) {
 			} else if string(c) == "*" {
 				i.tokens = append(i.tokens, "MULT")
 				tokpos++
-			} else if string(c) == "/" {
+			} else if string(c) == "/" && string(input[pos+1]) != "/" {
 				i.tokens = append(i.tokens, "DIV")
 				tokpos++
 			} else if string(c) == "\\" {
@@ -105,6 +105,15 @@ func (i *Interpret) lexer(input string) {
 				pos++
 				var s string
 				for string(input[pos]) != "\"" {
+					s += string(input[pos])
+					pos++
+				}
+				i.tokens = append(i.tokens, "TEXT:"+s)
+				tokpos++
+			} else if string(c) == "'" {
+				pos++
+				var s string
+				for string(input[pos]) != "'" {
 					s += string(input[pos])
 					pos++
 				}
@@ -281,6 +290,43 @@ func getvalue(tokens []string, i int, vars map[string]string, fun map[string][]s
 						s += strings.TrimPrefix(tokens[i], "TEXT:")
 					} else if strings.HasPrefix(tokens[i], "INT:") {
 						s += strings.TrimPrefix(tokens[i], "INT:")
+					} else if strings.HasPrefix(tokens[i], "STRING:") {
+						// If the token is a variable, replace it with its value
+						tokens[i] = strings.TrimPrefix(tokens[i], "STRING:")
+						if _, exists := vars[tokens[i]]; exists {
+							s += vars[tokens[i]]
+						} else if tokens[i] == "Random" {
+							min := 0
+							max := 0
+							for tokens[i] != "OP_B" {
+								i++
+							}
+							i++
+							for tokens[i] != "COM" {
+								if strings.HasPrefix(tokens[i], "INT:") {
+									tokens[i] = strings.TrimPrefix(tokens[i], "INT:")
+									//convert to int
+									min, _ = strconv.Atoi(tokens[i])
+								}
+								i++
+							}
+							for tokens[i] != "CL_B" {
+								if strings.HasPrefix(tokens[i], "INT:") {
+									tokens[i] = strings.TrimPrefix(tokens[i], "INT:")
+									//convert to int
+									max, _ = strconv.Atoi(tokens[i])
+								}
+								i++
+							}
+
+							randomNumber := rand.Intn(max+1-min) + min
+
+							s += strconv.Itoa(randomNumber)
+						} else if tokens[i] == "Read" {
+							i++
+							i++
+							s += lib.Read()
+						}
 					}
 					i++
 				}
