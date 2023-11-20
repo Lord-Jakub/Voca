@@ -14,7 +14,7 @@ import (
 
 // Create interpreter structure.
 type Interpret struct {
-	tokens   map[int]string
+	tokens   []string
 	KeyWords []string
 }
 
@@ -27,7 +27,7 @@ type code struct {
 // laxer function
 func (i *Interpret) lexer(input string) {
 	//create map of tokens
-	i.tokens = make(map[int]string)
+	i.tokens = []string{}
 
 	pos := 0
 	tokpos := 0
@@ -41,7 +41,8 @@ func (i *Interpret) lexer(input string) {
 				num += string(input[pos])
 				pos++
 			}
-			i.tokens[tokpos] = "INT:" + num
+			i.tokens = append(i.tokens, "INT:"+num)
+
 			pos--
 			tokpos++
 		} else if unicode.IsLetter(rune(c)) && !unicode.IsDigit(rune(c)) && !(string(c) == " ") {
@@ -53,49 +54,52 @@ func (i *Interpret) lexer(input string) {
 				pos++
 			}
 			if lib.Contains(s, i.KeyWords) {
-				i.tokens[tokpos] = "KEYWORD:" + s
+				i.tokens = append(i.tokens, "KEYWORD:"+s)
+
 				tokpos++
 			} else {
-				i.tokens[tokpos] = "STRING:" + s
+				i.tokens = append(i.tokens, "STRING:"+s)
+
 				tokpos++
 			}
 			pos--
 
 		} else if string(c) == " " {
 			//Whitespaces
-			i.tokens[tokpos] = "WHITESPACE"
+			i.tokens = append(i.tokens, "WHITESPACE")
+
 			tokpos++
 		} else {
 			//Symbols
 			if string(c) == "(" {
-				i.tokens[tokpos] = "OP_B"
+				i.tokens = append(i.tokens, "OP_B")
 				tokpos++
 			} else if string(c) == ")" {
-				i.tokens[tokpos] = "CL_B"
+				i.tokens = append(i.tokens, "CL_B")
 				tokpos++
 			} else if string(c) == "{" {
-				i.tokens[tokpos] = "OP_S_B"
+				i.tokens = append(i.tokens, "OP_S_B")
 				tokpos++
 			} else if string(c) == "}" {
-				i.tokens[tokpos] = "CL_S_B"
+				i.tokens = append(i.tokens, "CL_S_B")
 				tokpos++
 			} else if string(c) == "+" {
-				i.tokens[tokpos] = "PLUS"
+				i.tokens = append(i.tokens, "PLUS")
 				tokpos++
 			} else if string(c) == "-" {
-				i.tokens[tokpos] = "MINUS"
+				i.tokens = append(i.tokens, "MINUS")
 				tokpos++
 			} else if string(c) == "*" {
-				i.tokens[tokpos] = "MULT"
+				i.tokens = append(i.tokens, "MULT")
 				tokpos++
 			} else if string(c) == "/" {
-				i.tokens[tokpos] = "DIV"
+				i.tokens = append(i.tokens, "DIV")
 				tokpos++
 			} else if string(c) == "\\" {
-				i.tokens[tokpos] = "BACKSLASH"
+				i.tokens = append(i.tokens, "BACKSLASH")
 				tokpos++
 			} else if string(c) == "\n" {
-				i.tokens[tokpos] = "NEWLINE"
+				i.tokens = append(i.tokens, "NEWLINE")
 				tokpos++
 			} else if string(c) == "\"" {
 				pos++
@@ -104,28 +108,27 @@ func (i *Interpret) lexer(input string) {
 					s += string(input[pos])
 					pos++
 				}
-				pos++
-				i.tokens[tokpos] = "TEXT:" + s
+				i.tokens = append(i.tokens, "TEXT:"+s)
 				tokpos++
 			} else if string(c) == "=" {
 				if string(input[pos+1]) != "=" {
-					i.tokens[tokpos] = "EQ"
+					i.tokens = append(i.tokens, "EQ")
 				} else {
-					i.tokens[tokpos] = "DEQ"
+					i.tokens = append(i.tokens, "DEQ")
 				}
 
 				tokpos++
 			} else if string(c) == "<" {
-				i.tokens[tokpos] = "LESS"
+				i.tokens = append(i.tokens, "LESS")
 				tokpos++
 			} else if string(c) == ">" {
-				i.tokens[tokpos] = "MORE"
+				i.tokens = append(i.tokens, "MORE")
 				tokpos++
 			} else if string(c) == "!" && string(input[pos+1]) == "=" {
-				i.tokens[tokpos] = "NOT"
+				i.tokens = append(i.tokens, "NOT")
 				tokpos++
 			} else if string(c) == "," {
-				i.tokens[tokpos] = "COM"
+				i.tokens = append(i.tokens, "COM")
 				tokpos++
 			} else if string(c) == "/" && string(input[pos+1]) == "/" {
 				for string(input[pos]) != "\n" {
@@ -141,8 +144,8 @@ func (i *Interpret) lexer(input string) {
 }
 
 // GetCode function to extract code between curly braces
-func GetCode(tokens map[int]string, i int) (map[int]string, int) {
-	code := make(map[int]string)
+func GetCode(tokens []string, i int) ([]string, int) {
+	code := []string{}
 	for tokens[i] != "OP_S_B" {
 		i++
 	}
@@ -161,7 +164,7 @@ func GetCode(tokens map[int]string, i int) (map[int]string, int) {
 			if n == 0 {
 				break
 			}
-			code[x] = tokens[i]
+			code = append(code, tokens[i])
 			x++
 			i++
 		}
@@ -170,7 +173,7 @@ func GetCode(tokens map[int]string, i int) (map[int]string, int) {
 }
 
 // get name of func or var
-func getname(tokens map[int]string, i int) string {
+func getname(tokens []string, i int) string {
 	for !strings.HasPrefix(tokens[i], "STRING:") {
 		i++
 	}
@@ -179,7 +182,7 @@ func getname(tokens map[int]string, i int) string {
 }
 
 // get value of some tokens
-func getvalue(tokens map[int]string, i int, vars map[string]string, fun map[string]map[int]string) (string, int) {
+func getvalue(tokens []string, i int, vars map[string]string, fun map[string][]string) (string, int) {
 	for (tokens[i] != "NEWLINE") && (tokens[i] != "COM") && (tokens[i] != "CL_B") {
 		num1 := i
 		for tokens[num1] != "NEWLINE" && (tokens[i] != "COM") && (tokens[i] != "CL_B") {
@@ -212,15 +215,15 @@ func getvalue(tokens map[int]string, i int, vars map[string]string, fun map[stri
 					// Prepare for function execution
 					fnum := 0
 					fvars1 := make(map[string]string)
-					funcp := make(map[string]map[int]string)
+					funcp := make(map[string][]string)
 					for key, value := range fun {
 						funcp[key] = value
 					}
-					funCopy := make(map[string]map[int]string)
+					funCopy := make(map[string][]string)
 					for k, v := range fun {
-						funCopy[k] = make(map[int]string)
-						for k2, v2 := range v {
-							funCopy[k][k2] = v2
+						funCopy[k] = []string{}
+						for _, v2 := range v {
+							funCopy[k] = append(funCopy[k], v2)
 						}
 					}
 					tokens[i] = strings.TrimPrefix(tokens[i], "STRING:")
@@ -262,8 +265,28 @@ func getvalue(tokens map[int]string, i int, vars map[string]string, fun map[stri
 		}
 		// Check if the token is a text string
 		if strings.HasPrefix(tokens[i], "TEXT:") {
-			// Extract the text content and return
 			s := strings.TrimPrefix(tokens[i], "TEXT:")
+			joinstr := false
+			i2 := i
+			for tokens[i2] != "NEWLINE" {
+				if tokens[i2] == "PLUS" {
+					joinstr = true
+				}
+				i2++
+			}
+			i++
+			if joinstr {
+				for tokens[i] != "NEWLINE" {
+					if strings.HasPrefix(tokens[i], "TEXT:") {
+						s += strings.TrimPrefix(tokens[i], "TEXT:")
+					} else if strings.HasPrefix(tokens[i], "INT:") {
+						s += strings.TrimPrefix(tokens[i], "INT:")
+					}
+					i++
+				}
+			}
+			// Extract the text content and return
+
 			return s, i
 		} else if strings.HasPrefix(tokens[i], "INT:") {
 			// If the token is an integer
@@ -335,12 +358,12 @@ func getvalue(tokens map[int]string, i int, vars map[string]string, fun map[stri
 }
 
 // getbool function to evaluate boolean expressions
-func getbool(tokens map[int]string, i int, vars map[string]string, fun map[string]map[int]string) bool {
+func getbool(tokens []string, i int, vars map[string]string, fun map[string][]string) bool {
 	// List of operators
 	ops := []string{"DEQ", "LESS", "MORE", "NOT"}
 
 	// Create a map for the first set of tokens
-	toks1 := make(map[int]string)
+	toks1 := []string{}
 	i2 := 0
 
 	// Collect tokens until an operator is found
@@ -357,7 +380,7 @@ func getbool(tokens map[int]string, i int, vars map[string]string, fun map[strin
 	i++
 
 	// Create a map for the second set of tokens
-	toks2 := make(map[int]string)
+	toks2 := []string{}
 	i2 = 0
 
 	// Collect tokens until a newline or opening brace is encountered
@@ -391,9 +414,9 @@ func getbool(tokens map[int]string, i int, vars map[string]string, fun map[strin
 }
 
 // interpret function to process and execute the interpreted code
-func interpret(tokens map[int]string) {
+func interpret(tokens []string) {
 	// Initialize a map to store functions
-	fun := make(map[string]map[int]string)
+	fun := make(map[string][]string)
 
 	// Initialize a map for instance variables
 	ivars := make(map[string]string)
@@ -404,7 +427,7 @@ func interpret(tokens map[int]string) {
 	// Loop through the tokens
 	for i < len(tokens) {
 		// Initialize a map for the current function's code
-		funcode := make(map[int]string)
+		funcode := []string{}
 
 		// Check if the current token indicates the start of a function
 		if tokens[i] == "KEYWORD:func" {
@@ -433,7 +456,7 @@ func interpret(tokens map[int]string) {
 			n := 0
 			// Add the function code to the map
 			for n < len(funcode2) {
-				funcode[len(funcode)] = funcode2[n]
+				funcode = append(funcode, funcode2[n])
 				n++
 			}
 
@@ -484,7 +507,7 @@ func interpret(tokens map[int]string) {
 					for in.tokens[i3] != "CL_B" {
 
 						if strings.HasPrefix(in.tokens[i3], "STRING:") {
-							funcode[i4] = "VAR:" + strings.TrimPrefix(in.tokens[i3], "STRING:")
+							funcode = append(funcode, "VAR:"+strings.TrimPrefix(in.tokens[i3], "STRING:"))
 							i4++
 						}
 
@@ -496,7 +519,7 @@ func interpret(tokens map[int]string) {
 					n2 := 0
 					// Add the function code to the map
 					for n2 < len(funcode2) {
-						funcode[len(funcode)] = funcode2[n2]
+						funcode = append(funcode, funcode2[n2])
 						n2++
 					}
 
@@ -514,6 +537,10 @@ func interpret(tokens map[int]string) {
 
 		// Move to the next token in the original file
 		i++
+		// Check if i exceeds the length of tokens
+		if i >= len(tokens) {
+			break
+		}
 	}
 
 	// Create a code instance with variable and instance variable maps
@@ -531,11 +558,11 @@ func interpret(tokens map[int]string) {
 // It handles keywords such as "print", "var", "if", and "while", as well as function calls.
 // The function map stores the code for each function, indexed by function name.
 // The vars map stores the values of variables, indexed by variable name.
-func (c *code) Code(tokens map[int]string, fun map[string]map[int]string) string {
+func (c *code) Code(tokens []string, fun map[string][]string) string {
 	// Initialize the index variable
 	i := 0
 	// Initialize a map for function code
-	funcode := make(map[int]string)
+	funcode := []string{}
 
 	// Loop through the tokens to find and store functions
 	for i < len(tokens) {
@@ -656,13 +683,13 @@ func (c *code) Code(tokens map[int]string, fun map[string]map[int]string) string
 				// Prepare for function execution
 				fnum := 0
 				fvars1 := make(map[string]string)
-				funcp := make(map[string]map[int]string)
+				funcp := make(map[string][]string)
 				for key, value := range fun {
 					funcp[key] = value
 				}
-				funCopy := make(map[string]map[int]string)
+				funCopy := make(map[string][]string)
 				for k, v := range fun {
-					funCopy[k] = make(map[int]string)
+					funCopy[k] = []string{}
 					for k2, v2 := range v {
 						funCopy[k][k2] = v2
 					}
@@ -719,8 +746,9 @@ func (c *code) Code(tokens map[int]string, fun map[string]map[int]string) string
 }
 
 func main() {
-	os.Setenv("LC_ALL", "cs_CZ.UTF-8")
+
 	i := Interpret{
+		tokens:   make([]string, 0),
 		KeyWords: []string{"print", "if", "var", "func", "while", "import", "return"},
 	}
 	if len(os.Args) > 1 {
@@ -742,6 +770,13 @@ func main() {
 			} else {
 				lib.Print("Nesprávné použití příkazu get")
 			}
+		} else if os.Args[1] == "help" {
+			lib.Print("Voca - programming language")
+			lib.Print("Usage: -voca - to run main.v file")
+			lib.Print("       -voca [file] - to run [file].v file")
+			lib.Print("       -voca get [url] - to download file from [url] and save it to libs folder")
+			lib.Print("       -voca help - to show this help")
+
 		}
 
 	} else {

@@ -53,6 +53,10 @@ func Contains(s string, array []string) bool {
 }
 
 // from ChatGPT
+// Download - download file from url
+// destinationPath - path to save file
+// downloadUrl - url to download
+// return error
 func Download(destinationPath, downloadUrl string) error {
 	tempDestinationPath := destinationPath + ".tmp"
 	req, _ := http.NewRequest("GET", downloadUrl, nil)
