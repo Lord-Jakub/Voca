@@ -143,6 +143,7 @@ func (i *Interpret) lexer(input string) {
 				for string(input[pos]) != "\n" {
 					pos++
 				}
+				i.tokens = append(i.tokens, "NEWLINE")
 				tokpos++
 			}
 
@@ -200,8 +201,8 @@ func getvalue(tokens []string, i int, vars map[string]string, fun map[string][]s
 				token = strings.TrimPrefix(token, "STRING:")
 
 				if value, exists := vars[token]; exists {
-					if intValue, isInt := strconv.Atoi(value); isInt == nil {
-						tokens[i] = "INT:" + strconv.Itoa(intValue)
+					if floatValue, isFloat := strconv.ParseFloat(value, 64); isFloat == nil {
+						tokens[i] = "INT:" + strconv.FormatFloat(floatValue, 'f', 6, 64)
 					}
 				} else if _, exists := fun[token]; exists {
 					// Get the function arguments and prepare for function execution
@@ -252,8 +253,8 @@ func getvalue(tokens []string, i int, vars map[string]string, fun map[string][]s
 
 					val := c2.Code(funcp[tokens[i]], fun)
 
-					if intValue, isInt := strconv.Atoi(val); isInt == nil {
-						tokens[i] = "INT:" + strconv.Itoa(intValue)
+					if floatValue, isFloat := strconv.ParseFloat(val, 64); isFloat == nil {
+						tokens[i] = "INT:" + strconv.FormatFloat(floatValue, 'f', 6, 64)
 					} else {
 						tokens[i] = "TEXT:" + val
 					}
@@ -357,7 +358,7 @@ func getvalue(tokens []string, i int, vars map[string]string, fun map[string][]s
 			}
 			// Evaluate the numeric expression and return the result as a string
 			res, _ := num.Evaluate(numb)
-			return strconv.Itoa(res), i
+			return strconv.FormatFloat(res, 'f', 6, 64), i
 		} else if strings.HasPrefix(tokens[i], "STRING:") {
 			// If the token is a variable, replace it with its value
 			tokens[i] = strings.TrimPrefix(tokens[i], "STRING:")
@@ -758,7 +759,7 @@ func (c *code) Code(tokens []string, fun map[string][]string) string {
 			} else if _, exists := c.vars[tokens[i]]; exists {
 				// If the token is a variable, replace it with its value
 				fname := getname(tokens, i)
-				for tokens[i] != "EQ" {
+				for tokens[i] != "EQ" && i < len(tokens) {
 					i++
 				}
 				i++

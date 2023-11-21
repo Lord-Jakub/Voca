@@ -17,21 +17,24 @@ import (
 	"github.com/schollz/progressbar/v3"
 )
 
-// Print - print value
-func Print(s interface{}) {
-	os.Setenv("LC_ALL", "cs_CZ.UTF-8")
-	switch value := s.(type) {
-	case string:
-		//windows1250Encoder := charmap.Windows1250.NewEncoder()
-		//res, _ := windows1250Encoder.String(value)
-		fmt.Println(value)
+// Remove trailing zeros from float64
+func removeTrailingZeros(str string) string {
 
-	case int:
-		// Parase int to string
-		strValue := strconv.Itoa(value)
-		fmt.Println(strValue)
-	default:
-		fmt.Println("Nerozpoznaný typ:", value)
+	// Remove trailing zeros
+	str = strings.TrimRight(str, "0")
+
+	// Remove trailing dot
+	str = strings.TrimRight(str, ".")
+
+	return str
+}
+func Print(s interface{}) {
+	_, err := strconv.ParseFloat(s.(string), 64)
+
+	if err == nil {
+		fmt.Println(removeTrailingZeros(s.(string)))
+	} else {
+		fmt.Println(s)
 	}
 }
 
@@ -83,4 +86,25 @@ func ExtractFileName(urlString string) (string, error) {
 
 	fileName := path.Base(parsedURL.Path)
 	return fileName, nil
+}
+
+func ParseFloat(s string) float64 {
+	if strings.Contains(s, ".") {
+		// Pokud obsahuje desetinnou tečku, převedeme na float
+		f, err := strconv.ParseFloat(s, 64)
+		if err != nil {
+			fmt.Println("Chyba při převodu na float:", err)
+
+		}
+		return f
+	} else {
+		// Pokud neobsahuje desetinnou tečku, převedeme na int a poté na float
+		i, err := strconv.Atoi(s)
+		if err != nil {
+			fmt.Println("Chyba při převodu na int:", err)
+
+		}
+		f := float64(i)
+		return f
+	}
 }

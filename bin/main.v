@@ -9,4 +9,5 @@ func main(){
    var s = Read()
    print 'You wrote: "' + s +'", didnt you?'
    print "Random number: " + Random(1, 5)
+   print 5/2 //can use float
 }

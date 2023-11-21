@@ -1,8 +1,8 @@
 package num
 
 import (
+	"Voca/lib"
 	"fmt"
-	"strconv"
 	"strings"
 )
 
@@ -11,7 +11,7 @@ const (
 	OPERATOR = 1
 )
 
-func Evaluate(tokens map[int]string) (int, error) {
+func Evaluate(tokens map[int]string) (float64, error) {
 	n := 0
 	for n < len(tokens) {
 
@@ -21,10 +21,10 @@ func Evaluate(tokens map[int]string) (int, error) {
 		n++
 	}
 
-	var stack []int
+	var stack []float64
 	var operators []string
 
-	precedence := map[string]int{
+	precedence := map[string]float64{
 		"MULT":  2,
 		"DIV":   2,
 		"PLUS":  1,
@@ -40,10 +40,9 @@ func Evaluate(tokens map[int]string) (int, error) {
 		}
 
 		if tokenType == INT {
-			num, err := strconv.Atoi(tokenValue)
-			if err != nil {
-				return 0, err
-			}
+
+			num := lib.ParseFloat(tokenValue)
+
 			stack = append(stack, num)
 		} else if tokenType == OPERATOR {
 			for len(operators) > 0 && precedence[operators[len(operators)-1]] >= precedence[tokenValue] {
@@ -53,7 +52,7 @@ func Evaluate(tokens map[int]string) (int, error) {
 				stack = stack[:len(stack)-1]
 				a := stack[len(stack)-1]
 				stack = stack[:len(stack)-1]
-				result := 0
+				result := 0.0
 
 				switch op {
 				case "PLUS":
@@ -81,7 +80,7 @@ func Evaluate(tokens map[int]string) (int, error) {
 		stack = stack[:len(stack)-1]
 		a := stack[len(stack)-1]
 		stack = stack[:len(stack)-1]
-		result := 0
+		result := 0.0
 
 		switch op {
 		case "PLUS":
