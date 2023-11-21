@@ -9,9 +9,27 @@ Voca is a simple programming language, written in Go, which I am currently worki
  - [x] Print() function 
  - [x] If and While
  - [x] Import other files written in Voce
- - [ ] String concatenation
+ - [x] String concatenation
  - [ ] Several simple libraries (e.g., library for advanced math
        functions, etc.)
  - [ ] Possibility to create a GUI
 
-**Meanwhile, the interpreter will execute the code.v program in the folder it is in when it starts, command line execution using arguments will be implemented**
+
+**How to setup:**
+1. Download executeble for your system
+2. Write code and save it as main.v (in future there will be command lika run path/to/program.v)
+3. Run interpreter.
+
+
+## Hello World Program:
+```go
+func main(){
+    var s = "Hello World"
+    print s
+}
+```
+
+**Now let's break down the code:**
+* All code must be in the main() function.
+* Variables do not have types, they are defined using the var keyword.
+* We can print the value using print.
