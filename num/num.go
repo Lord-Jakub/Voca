@@ -3,7 +3,6 @@ package num
 import (
 	"Voca/lib"
 	"fmt"
-	"strings"
 )
 
 const (
@@ -12,23 +11,15 @@ const (
 )
 
 func Evaluate(tokens map[int]string) (float64, error) {
-	n := 0
-	for n < len(tokens) {
-
-		if strings.Contains(tokens[n], ":") {
-			tokens[n] = strings.SplitN(tokens[n], ":", 2)[1]
-		}
-		n++
-	}
 
 	var stack []float64
 	var operators []string
 
 	precedence := map[string]float64{
-		"MULT":  2,
-		"DIV":   2,
-		"PLUS":  1,
-		"MINUS": 1,
+		"*": 2,
+		"/": 2,
+		"+": 1,
+		"-": 1,
 	}
 
 	for i := 0; i < len(tokens); i++ {
@@ -55,13 +46,13 @@ func Evaluate(tokens map[int]string) (float64, error) {
 				result := 0.0
 
 				switch op {
-				case "PLUS":
+				case "+":
 					result = a + b
-				case "MINUS":
+				case "-":
 					result = a - b
-				case "MULT":
+				case "*":
 					result = a * b
-				case "DIV":
+				case "/":
 					if b == 0 {
 						return 0, fmt.Errorf("Dělení nulou")
 					}
@@ -83,13 +74,13 @@ func Evaluate(tokens map[int]string) (float64, error) {
 		result := 0.0
 
 		switch op {
-		case "PLUS":
+		case "+":
 			result = a + b
-		case "MINUS":
+		case "-":
 			result = a - b
-		case "MULT":
+		case "*":
 			result = a * b
-		case "DIV":
+		case "/":
 			if b == 0 {
 				return 0, fmt.Errorf("Dělení nulou")
 			}
