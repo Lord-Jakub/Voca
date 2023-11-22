@@ -85,9 +85,9 @@ func (i *Interpret) lexer(input string) {
 
 	pos := 0
 	tokpos := 0
-
+	lines := 1
 	for pos < len(input) {
-		lines := 0
+
 		c := input[pos]
 		if unicode.IsDigit(rune(c)) {
 			//Numbers
