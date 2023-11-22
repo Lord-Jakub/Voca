@@ -4,6 +4,7 @@ package main
 import (
 	"Voca/lib"
 	"Voca/num"
+	"log"
 	"math/rand"
 	"os"
 	"path/filepath"
@@ -154,7 +155,7 @@ func (i *Interpret) lexer(input string) {
 }
 
 // GetCode function to extract code between curly braces
-func GetCode(tokens []string, i int) ([]string, int) {
+func GetCode(tokens []string, i int, l int) ([]string, int, int) {
 	code := []string{}
 	for tokens[i] != "OP_S_B" {
 		i++
@@ -164,7 +165,9 @@ func GetCode(tokens []string, i int) ([]string, int) {
 		i++
 		x := 0
 		for n != 0 {
-
+			if tokens[i] == "NEWLINE" {
+				l++
+			}
 			if tokens[i] == "OP_S_B" {
 				n++
 			}
@@ -179,7 +182,8 @@ func GetCode(tokens []string, i int) ([]string, int) {
 			i++
 		}
 	}
-	return code, i
+	code = append(code, "NEWLINE")
+	return code, i, l
 }
 
 // get name of func or var
@@ -204,6 +208,9 @@ func getvalue(tokens []string, i int, vars map[string]string, fun map[string][]s
 					if floatValue, isFloat := strconv.ParseFloat(value, 64); isFloat == nil {
 						tokens[i] = "INT:" + strconv.FormatFloat(floatValue, 'f', 6, 64)
 					}
+				} else if token == "true" || token == "false" {
+					return token, i
+
 				} else if _, exists := fun[token]; exists {
 					// Get the function arguments and prepare for function execution
 					i3 := i
@@ -251,7 +258,7 @@ func getvalue(tokens []string, i int, vars map[string]string, fun map[string][]s
 					fun = funCopy
 					// Execute the function code
 
-					val := c2.Code(funcp[tokens[i]], fun)
+					val := c2.Code(funcp[tokens[i]], fun, 0)
 
 					if floatValue, isFloat := strconv.ParseFloat(val, 64); isFloat == nil {
 						tokens[i] = "INT:" + strconv.FormatFloat(floatValue, 'f', 6, 64)
@@ -415,7 +422,7 @@ func getbool(tokens []string, i int, vars map[string]string, fun map[string][]st
 
 	// Collect tokens until an operator is found
 	for !lib.Contains(tokens[i], ops) {
-		toks1[i2] = tokens[i]
+		toks1 = append(toks1, tokens[i])
 		i++
 		i2++
 	}
@@ -432,14 +439,14 @@ func getbool(tokens []string, i int, vars map[string]string, fun map[string][]st
 
 	// Collect tokens until a newline or opening brace is encountered
 	for (tokens[i] != "NEWLINE") && (tokens[i] != "OP_S_B") {
-		toks2[i2] = tokens[i]
+		toks2 = append(toks2, tokens[i])
 		i++
 		i2++
 	}
 
 	// Add "NEWLINE" tokens to both sets
-	toks1[len(toks1)] = "NEWLINE"
-	toks2[len(toks2)] = "NEWLINE"
+	toks1 = append(toks1, "NEWLINE")
+	toks2 = append(toks2, "NEWLINE")
 
 	// Get values from the token sets
 	val1, _ := getvalue(toks1, 0, vars, fun)
@@ -462,6 +469,7 @@ func getbool(tokens []string, i int, vars map[string]string, fun map[string][]st
 
 // interpret function to process and execute the interpreted code
 func interpret(tokens []string) {
+	lines := 0
 	// Initialize a map to store functions
 	fun := make(map[string][]string)
 
@@ -499,7 +507,8 @@ func interpret(tokens []string) {
 			}
 
 			// Extract the function code using the GetCode function
-			funcode2, i22 := GetCode(tokens, i)
+			funcode2, i22, _ := GetCode(tokens, i, 0)
+
 			n := 0
 			// Add the function code to the map
 			for n < len(funcode2) {
@@ -562,7 +571,7 @@ func interpret(tokens []string) {
 					}
 
 					// Extract the function code using the GetCode function
-					funcode2, i22 := GetCode(in.tokens, n)
+					funcode2, i22, _ := GetCode(in.tokens, n, 0)
 					n2 := 0
 					// Add the function code to the map
 					for n2 < len(funcode2) {
@@ -580,6 +589,9 @@ func interpret(tokens []string) {
 				// Move to the next token in the imported file
 				n++
 			}
+		} else if tokens[i] == "NEWLINE" {
+			// Increase the line counter
+			lines++
 		}
 
 		// Move to the next token in the original file
@@ -597,7 +609,7 @@ func interpret(tokens []string) {
 	}
 
 	// Execute the code for the main function
-	c.Code(fun["main"], fun)
+	c.Code(fun["main"], fun, lines)
 }
 
 // Code executes the code represented by the given tokens and function map.
@@ -605,7 +617,7 @@ func interpret(tokens []string) {
 // It handles keywords such as "print", "var", "if", and "while", as well as function calls.
 // The function map stores the code for each function, indexed by function name.
 // The vars map stores the values of variables, indexed by variable name.
-func (c *code) Code(tokens []string, fun map[string][]string) string {
+func (c *code) Code(tokens []string, fun map[string][]string, lines int) string {
 	// Initialize the index variable
 	i := 0
 	// Initialize a map for function code
@@ -635,7 +647,7 @@ func (c *code) Code(tokens []string, fun map[string][]string) string {
 			}
 
 			// Extract the function code using the GetCode function
-			funcode2, i22 := GetCode(tokens, i)
+			funcode2, i22, _ := GetCode(tokens, i, 0)
 			n := 0
 			// Add the function code to the map
 			for n < len(funcode2) {
@@ -663,7 +675,8 @@ func (c *code) Code(tokens []string, fun map[string][]string) string {
 			// Ignore whitespace tokens
 
 		case tokens[i] == "NEWLINE":
-			// Ignore newline tokens
+			//Increase lines counter
+			lines++
 
 		case strings.HasPrefix(tokens[i], "KEYWORD:"):
 			// Check for keyword tokens
@@ -686,18 +699,21 @@ func (c *code) Code(tokens []string, fun map[string][]string) string {
 			case strings.TrimPrefix(tokens[i], "KEYWORD:") == "if":
 				// If the keyword is "if," get the code block and execute it if the condition is true
 				i++
-				toks, ifl := GetCode(tokens, i)
+				toks, ifl, l := GetCode(tokens, i, lines)
+				lines = l
 				if getbool(tokens, i, c.vars, fun) {
-					c.Code(toks, fun)
+					c.Code(toks, fun, 0)
 				}
 				i = ifl
 			case strings.TrimPrefix(tokens[i], "KEYWORD:") == "while":
 				// If the keyword is "while," get the code block and execute it while the condition is true
 				i++
-				toks, ifl := GetCode(tokens, i)
+				toks, ifl, l := GetCode(tokens, i, lines)
+				lines = l
 				for getbool(tokens, i, c.vars, fun) {
-					toks, ifl = GetCode(tokens, i)
-					c.Code(toks, fun)
+					toks, ifl, l = GetCode(tokens, i, lines)
+					lines = l
+					c.Code(toks, fun, 0)
 				}
 				i = ifl
 			case strings.TrimPrefix(tokens[i], "KEYWORD:") == "return":
@@ -754,7 +770,7 @@ func (c *code) Code(tokens []string, fun map[string][]string) string {
 				}
 				fun = funCopy
 				// Execute the function code
-				c2.Code(funcp[tokens[i]], fun)
+				c2.Code(funcp[tokens[i]], fun, 0)
 				i = i3
 			} else if _, exists := c.vars[tokens[i]]; exists {
 				// If the token is a variable, replace it with its value
@@ -766,6 +782,8 @@ func (c *code) Code(tokens []string, fun map[string][]string) string {
 				val, vl := getvalue(tokens, i, c.vars, fun)
 				c.vars[fname] = val
 				i = vl
+			} else {
+				log.Fatal("Unknown token: \"" + tokens[i] + "\" on line " + strconv.Itoa(lines))
 			}
 
 		default:
@@ -774,7 +792,7 @@ func (c *code) Code(tokens []string, fun map[string][]string) string {
 
 			} else if tokens[i] == "NEWLINE" {
 			} else {
-				lib.Print("unknown keyword")
+				lib.Print("Unknown token: " + tokens[i] + " on line " + strconv.Itoa(lines))
 			}
 		}
 		// Move to the next token
