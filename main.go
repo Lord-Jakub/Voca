@@ -4,7 +4,6 @@ package main
 import (
 	"Voca/lib"
 	"Voca/num"
-	"log"
 	"math/rand"
 	"os"
 	"path/filepath"
@@ -89,7 +88,8 @@ func (i *Interpret) lexer(input string) {
 	for pos < len(input) {
 
 		c := input[pos]
-		if unicode.IsDigit(rune(c)) {
+		switch {
+		case unicode.IsDigit(rune(c)):
 			//Numbers
 			var num string
 			for pos < len(input) && (unicode.IsDigit(rune(input[pos])) || string(input[pos]) == ".") {
@@ -104,7 +104,7 @@ func (i *Interpret) lexer(input string) {
 
 			pos--
 			tokpos++
-		} else if unicode.IsLetter(rune(c)) && !unicode.IsDigit(rune(c)) && !(string(c) == " ") && !(string(c) == "\"") && !(string(c) == "'") {
+		case unicode.IsLetter(rune(c)) && !unicode.IsDigit(rune(c)) && !(string(c) == " ") && !(string(c) == "\"") && !(string(c) == "'"):
 			//Strings
 			var s string
 			for pos < len(input) && (unicode.IsLetter(rune(input[pos])) || unicode.IsDigit(rune(input[pos])) || (string(input[pos]) == ".")) && !(string(input[pos]) == " ") && !(string(input[pos]) == "\"") && !(string(input[pos]) == "'") {
@@ -131,35 +131,27 @@ func (i *Interpret) lexer(input string) {
 			}
 			pos--
 
-		} else if string(c) == " " {
-			//Whitespaces
-			i.tokens = append(i.tokens, Token{
-				Type: Whitespace,
-				Line: lines,
-			})
-
-			tokpos++
-		} else if string(c) == "/" && string(input[pos+1]) == "/" {
+		case string(c) == "/" && string(input[pos+1]) == "/":
 			//Comments
 			for pos < len(input) && string(input[pos]) != "\n" {
 				pos++
 			}
 			lines++
-		} else if string(c) == "=" && string(input[pos+1]) == "=" {
+		case string(c) == "=" && string(input[pos+1]) == "=":
 			pos++
 			i.tokens = append(i.tokens, Token{
 				Type: DoubleEqual,
 				Line: lines,
 			})
 
-		} else if string(c) == "!" && string(input[pos+1]) == "=" {
+		case string(c) == "!" && string(input[pos+1]) == "=":
 			pos++
 			i.tokens = append(i.tokens, Token{
 				Type: NotEqual,
 				Line: lines,
 			})
 
-		} else if string(c) == "\"" {
+		case string(c) == "\"":
 			//Strings
 			var s string
 			pos++
@@ -173,7 +165,7 @@ func (i *Interpret) lexer(input string) {
 				Value: s,
 				Line:  lines,
 			})
-		} else if string(c) == "'" {
+		case string(c) == "'":
 			//Strings
 			var s string
 			pos++
@@ -187,16 +179,18 @@ func (i *Interpret) lexer(input string) {
 				Value: s,
 				Line:  lines,
 			})
-		} else if string(c) == "\n" {
+		case string(c) == "\n":
 			//New line
 			i.tokens = append(i.tokens, Token{
 				Type: NewLine,
 				Line: lines,
 			})
 			lines++
-		} else if token, ok := symbolMap[c]; ok {
-			i.tokens = append(i.tokens, Token{Type: token})
-			tokpos++
+		default:
+			if token, ok := symbolMap[c]; ok {
+				i.tokens = append(i.tokens, Token{Type: token, Line: lines, Value: string(c)})
+				tokpos++
+			}
 		}
 		pos++
 	}
@@ -326,13 +320,10 @@ func getvalue(tokens []Token, i int, vars map[string]string, fun map[string][]To
 			if _, exist := vars[tokens[i].Value.(string)]; exist {
 				if _, err := strconv.Atoi(vars[tokens[i].Value.(string)]); err == nil {
 					tokens[i] = Token{Type: Int, Value: vars[tokens[i].Value.(string)]}
-				} else {
-					tokens[i] = Token{Type: Text, Value: vars[tokens[i].Value.(string)]}
 				}
 
 			}
 		}
-		// Check if the token is a text string
 		if tokens[i].Type == Text {
 			s := tokens[i].Value.(string)
 			joinstr := false
@@ -472,6 +463,9 @@ func getvalue(tokens []Token, i int, vars map[string]string, fun map[string][]To
 
 		i++
 	}
+	if tokens[i].Type != NewLine && tokens[i-1].Type != Whitespace {
+		lib.Print("Unexpected token: \"" + tokens[i].Value.(string) + "\" on line " + strconv.Itoa(tokens[i].Line))
+	}
 	return "", i
 }
 
@@ -501,9 +495,9 @@ func getbool(tokens []Token, i int, vars map[string]string, fun map[string][]Tok
 	}
 
 	op := tokens[i].Type
-	if op == DoubleEqual || op == NotEqual {
+	/*if op == DoubleEqual || op == NotEqual {
 		i++
-	}
+	}*/
 	i++
 
 	// Create a map for the second set of tokens
@@ -853,7 +847,7 @@ func (c *code) Code(tokens []Token, fun map[string][]Token) string {
 				c.vars[fname] = val
 				i = vl
 			} else {
-				log.Fatal("Unknown token: \"" + tokens[i].Value.(string) + "\" on line " + strconv.Itoa(tokens[i].Line))
+				lib.Print("Unexpected token: \"" + tokens[i].Value.(string) + "\" on line " + strconv.Itoa(tokens[i].Line))
 			}
 
 		default:
@@ -862,7 +856,7 @@ func (c *code) Code(tokens []Token, fun map[string][]Token) string {
 
 			} else if tokens[i].Type == NewLine {
 			} else {
-				log.Fatal("Unknown token: \"" + tokens[i].Value.(string) + "\" on line " + strconv.Itoa(tokens[i].Line))
+				lib.Print("Unexpected token: \"" + tokens[i].Value.(string) + "\" on line " + strconv.Itoa(tokens[i].Line))
 			}
 		}
 		// Move to the next token
@@ -903,18 +897,24 @@ func main() {
 			lib.Print("       -voca get [url] - to download file from [url] and save it to libs folder")
 			lib.Print("       -voca help - to show this help")
 
+		} else if os.Args[1] == "run" {
+			//get file path
+			file_path := os.Args[2]
+			//read file
+			data, _ := os.ReadFile(file_path)
+
+			input := string(data)
+			input = strings.Replace(input, "\\r\\n", "\\n", -1)
+			i.lexer(input)
+			interpret(i.tokens)
 		}
 
 	} else {
 		file_path := ""
 		//run if args exist
-		if len(os.Args) > 2 {
-			//get file path
-			file_path = os.Args[1]
-		} else {
-			cur_dir, _ := os.Getwd()
-			file_path = cur_dir + "/main.v"
-		}
+
+		cur_dir, _ := os.Getwd()
+		file_path = cur_dir + "/main.v"
 
 		data, _ := os.ReadFile(file_path)
 
