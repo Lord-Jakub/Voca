@@ -8,13 +8,9 @@ import (
 	"strings"
 
 	//"golang.org/x/text/encoding/charmap"
-	"io"
-	"net/http"
 
 	"net/url"
 	"path"
-
-	"github.com/schollz/progressbar/v3"
 )
 
 // Remove trailing zeros from float64
@@ -53,28 +49,6 @@ func Contains(s string, array []string) bool {
 		}
 	}
 	return false
-}
-
-// from ChatGPT
-// Download - download file from url
-// destinationPath - path to save file
-// downloadUrl - url to download
-// return error
-func Download(destinationPath, downloadUrl string) error {
-	tempDestinationPath := destinationPath + ".tmp"
-	req, _ := http.NewRequest("GET", downloadUrl, nil)
-	resp, _ := http.DefaultClient.Do(req)
-	defer resp.Body.Close()
-
-	f, _ := os.OpenFile(tempDestinationPath, os.O_CREATE|os.O_WRONLY, 0644)
-
-	bar := progressbar.DefaultBytes(
-		resp.ContentLength,
-		"downloading",
-	)
-	io.Copy(io.MultiWriter(f, bar), resp.Body)
-	os.Rename(tempDestinationPath, destinationPath)
-	return nil
 }
 
 // from ChatGPT

@@ -885,7 +885,7 @@ func main() {
 				//get urlr
 				url := os.Args[2]
 				//download file
-				lib.Download(file_path, url)
+				lib.DownloadFile(file_path, url)
 			} else {
 				lib.Print("Nesprávné použití příkazu get")
 			}
