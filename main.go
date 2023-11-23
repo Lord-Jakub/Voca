@@ -892,8 +892,9 @@ func main() {
 		} else if os.Args[1] == "help" {
 			lib.Print("Voca - programming language")
 			lib.Print("Usage: -voca - to run main.v file")
-			lib.Print("       -voca [file] - to run [file].v file")
+			lib.Print("       -voca run [file] - to run [file].v file")
 			lib.Print("       -voca get [url] - to download file from [url] and save it to libs folder")
+			lib.Print("       -voca version - to show version")
 			lib.Print("       -voca help - to show this help")
 
 		} else if os.Args[1] == "run" {
