@@ -876,12 +876,11 @@ func main() {
 			//get if args exist
 			if len(os.Args) > 2 {
 				//get file path
-				executablePath, err := os.Executable()
-				if err != nil {
-					lib.Print("Nelze získat cestu k spustitelnému souboru:" + err.Error())
-					return
-				}
+				executablePath, _ := os.Executable()
 				file_name, _ := lib.ExtractFileName(os.Args[2])
+				if _, err := os.Stat(filepath.Dir(executablePath) + "/" + "libs"); os.IsNotExist(err) {
+					os.Mkdir(filepath.Dir(executablePath)+"/"+"libs", 0755)
+				}
 				file_path := filepath.Dir(executablePath) + "/" + "libs/" + file_name
 				//get urlr
 				url := os.Args[2]
