@@ -12,7 +12,7 @@ func main(){
    print add.Add(6,2)
    print "Write something:"
    var s = Read()
-   {}
+   {} //Throw error, but don't crash
    print 'You wrote: "' + s +'", didnt you?'
    print "Random number: " + Random(1, 5)
    print 5/2 //can use float
