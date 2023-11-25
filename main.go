@@ -4,6 +4,7 @@ package main
 import (
 	"Voca/lib"
 	"Voca/num"
+	"log"
 	"math/rand"
 	"os"
 	"path/filepath"
@@ -140,15 +141,17 @@ func (i *Interpret) lexer(input string) {
 		case string(c) == "=" && string(input[pos+1]) == "=":
 			pos++
 			i.tokens = append(i.tokens, Token{
-				Type: DoubleEqual,
-				Line: lines,
+				Type:  DoubleEqual,
+				Line:  lines,
+				Value: "==",
 			})
 
 		case string(c) == "!" && string(input[pos+1]) == "=":
 			pos++
 			i.tokens = append(i.tokens, Token{
-				Type: NotEqual,
-				Line: lines,
+				Type:  NotEqual,
+				Line:  lines,
+				Value: "!=",
 			})
 
 		case string(c) == "\"":
@@ -182,8 +185,9 @@ func (i *Interpret) lexer(input string) {
 		case string(c) == "\n":
 			//New line
 			i.tokens = append(i.tokens, Token{
-				Type: NewLine,
-				Line: lines,
+				Type:  NewLine,
+				Line:  lines,
+				Value: "\n",
 			})
 			lines++
 		default:
@@ -481,7 +485,7 @@ func Contains(s TokenType, array []TokenType) bool {
 // getbool function to evaluate boolean expressions
 func getbool(tokens []Token, i int, vars map[string]string, fun map[string][]Token) bool {
 	// List of operators
-	ops := []TokenType{DoubleEqual, LessThan, MoreThan, Not}
+	ops := []TokenType{DoubleEqual, LessThan, MoreThan, NotEqual}
 
 	// Create a map for the first set of tokens
 	toks1 := []Token{}
@@ -901,7 +905,11 @@ func main() {
 			//get file path
 			file_path := os.Args[2]
 			//read file
-			data, _ := os.ReadFile(file_path)
+			data, err := os.ReadFile(file_path)
+			if err != nil {
+				lib.Print("Nelze načíst soubor: " + err.Error())
+				log.Fatal(err)
+			}
 
 			input := string(data)
 			input = strings.Replace(input, "\\r\\n", "\\n", -1)
@@ -918,7 +926,11 @@ func main() {
 		cur_dir, _ := os.Getwd()
 		file_path = cur_dir + "/main.v"
 
-		data, _ := os.ReadFile(file_path)
+		data, err := os.ReadFile(file_path)
+		if err != nil {
+			lib.Print("Nelze načíst soubor: " + err.Error())
+			log.Fatal(err)
+		}
 
 		input := string(data)
 		input = strings.Replace(input, "\\r\\n", "\\n", -1)
