@@ -5,6 +5,7 @@ import (
 	"Voca/lib"
 	"Voca/num"
 	"log"
+	"math"
 	"math/rand"
 	"os"
 	"path/filepath"
@@ -240,15 +241,21 @@ func getname(tokens []Token, i int) string {
 
 // get value of some tokens
 func getvalue(tokens []Token, i int, vars map[string]string, fun map[string][]Token) (string, int) {
-	for (tokens[i].Type != NewLine) && (tokens[i].Type != Comma) && (tokens[i].Type != CloseParen) {
+	t := make([]Token, len(tokens))
+
+	// Kopírování obsahu z prvního pole do druhého pole
+	copy(t, tokens)
+
+	//t := tokens
+	for (t[i].Type != NewLine) && (t[i].Type != Comma) && (t[i].Type != CloseParen) {
 		num1 := i
-		for tokens[num1].Type != NewLine && (tokens[i].Type != Comma) && (tokens[i].Type != CloseParen) {
-			if tokens[i].Type == String {
-				token := tokens[i]
+		for t[num1].Type != NewLine && (t[i].Type != Comma) && (t[i].Type != CloseParen) {
+			if t[i].Type == String {
+				token := t[i]
 
 				if value, exists := vars[token.Value.(string)]; exists {
 					if floatValue, isFloat := strconv.ParseFloat(value, 64); isFloat == nil {
-						tokens[i] = Token{Type: Int, Value: strconv.FormatFloat(floatValue, 'f', 6, 64)}
+						t[i] = Token{Type: Int, Value: strconv.FormatFloat(floatValue, 'f', 6, 64)}
 					}
 				} else if token.Value == "true" || token.Value == "false" {
 					return token.Value.(string), i
@@ -256,16 +263,16 @@ func getvalue(tokens []Token, i int, vars map[string]string, fun map[string][]To
 				} else if _, exists := fun[token.Value.(string)]; exists {
 					// Get the function arguments and prepare for function execution
 					i3 := i
-					for tokens[i3].Type != OpenParen {
+					for t[i3].Type != OpenParen {
 						i3++
 					}
 					i3++
 					i4 := 0
 					fargs := make(map[int]string)
-					for tokens[i3].Type != CloseParen && tokens[i3].Type != NewLine {
-						if tokens[i3].Type != Comma {
+					for t[i3].Type != CloseParen && t[i3].Type != NewLine {
+						if t[i3].Type != Comma {
 							//i4b := 0
-							fargs[i4], _ = getvalue(tokens, i3, vars, fun)
+							fargs[i4], _ = getvalue(t, i3, vars, fun)
 							i4++ //= i4b
 						}
 
@@ -285,33 +292,33 @@ func getvalue(tokens []Token, i int, vars map[string]string, fun map[string][]To
 							funCopy[k] = append(funCopy[k], v2)
 						}
 					}
-					if funcp[tokens[i].Value.(string)][fnum].Type == String {
-						for funcp[tokens[i].Value.(string)][fnum].Type == String && strings.HasPrefix(funcp[tokens[i].Value.(string)][fnum].Value.(string), "VAR:") {
-							// Assign values to function parameters
-							fvars1[strings.TrimPrefix(funcp[tokens[i].Value.(string)][fnum].Value.(string), "VAR:")] = fargs[fnum]
-							funcp[tokens[i].Value.(string)][fnum].Type = Whitespace
-							fnum++
-						}
+					//if funcp[t[i].Value.(string)][fnum].Type == String {
+					for /*funcp[t[i].Value.(string)][fnum].Type == String && */ strings.HasPrefix(funcp[t[i].Value.(string)][fnum].Value.(string), "VAR:") {
+						// Assign values to function parameters
+						fvars1[strings.TrimPrefix(funcp[t[i].Value.(string)][fnum].Value.(string), "VAR:")] = fargs[fnum]
+						funcp[t[i].Value.(string)][fnum].Type = Whitespace
+						fnum++
 					}
+					//}
 
 					// Create a new code instance for function execution
 					c2 := code{
 						vars: fvars1,
 					}
-					fun = funCopy
+					//fun = funCopy
 					// Execute the function code
 
 					val := c2.Code(funcp[tokens[i].Value.(string)], fun)
 
 					if floatValue, isFloat := strconv.ParseFloat(val, 64); isFloat == nil {
-						tokens[i] = Token{Type: Int, Value: strconv.FormatFloat(floatValue, 'f', 6, 64)}
+						t[i] = Token{Type: Int, Value: strconv.FormatFloat(floatValue, 'f', 6, 64)}
 					} else {
-						tokens[i] = Token{Type: Text, Value: val}
+						t[i] = Token{Type: Text, Value: val}
 					}
 					int1 := i + 1
 					for int1 < i3 {
-						if tokens[int1].Type != Whitespace {
-							tokens[int1].Type = Whitespace
+						if t[int1].Type != Whitespace {
+							t[int1].Type = Whitespace
 						}
 						int1++
 					}
@@ -320,56 +327,56 @@ func getvalue(tokens []Token, i int, vars map[string]string, fun map[string][]To
 			}
 			num1++
 		}
-		if tokens[i].Type == String {
-			if _, exist := vars[tokens[i].Value.(string)]; exist {
-				if _, err := strconv.Atoi(vars[tokens[i].Value.(string)]); err == nil {
-					tokens[i] = Token{Type: Int, Value: vars[tokens[i].Value.(string)]}
+		if t[i].Type == String {
+			if _, exist := vars[t[i].Value.(string)]; exist {
+				if _, err := strconv.Atoi(vars[t[i].Value.(string)]); err == nil {
+					t[i] = Token{Type: Int, Value: vars[t[i].Value.(string)]}
 				}
 
 			}
 		}
-		if tokens[i].Type == Text {
-			s := tokens[i].Value.(string)
+		if t[i].Type == Text {
+			s := t[i].Value.(string)
 			joinstr := false
 			i2 := i
-			for tokens[i2].Type != NewLine {
-				if tokens[i2].Type == Plus {
+			for t[i2].Type != NewLine {
+				if t[i2].Type == Plus {
 					joinstr = true
 				}
 				i2++
 			}
 			i++
 			if joinstr {
-				for tokens[i].Type != NewLine {
-					if tokens[i].Type == Text {
-						s += tokens[i].Value.(string)
-					} else if tokens[i].Type == Int {
-						s += tokens[i].Value.(string)
-					} else if tokens[i].Type == String {
+				for t[i].Type != NewLine {
+					if t[i].Type == Text {
+						s += t[i].Value.(string)
+					} else if t[i].Type == Int {
+						s += t[i].Value.(string)
+					} else if t[i].Type == String {
 						// If the token is a variable, replace it with its value
 
-						if _, exists := vars[tokens[i].Value.(string)]; exists {
-							s += vars[tokens[i].Value.(string)]
-						} else if tokens[i].Value.(string) == "Random" {
+						if _, exists := vars[t[i].Value.(string)]; exists {
+							s += vars[t[i].Value.(string)]
+						} else if t[i].Value.(string) == "Random" {
 							min := 0
 							max := 0
-							for tokens[i].Type != OpenParen {
+							for t[i].Type != OpenParen {
 								i++
 							}
 							i++
-							for tokens[i].Type != Comma {
-								if tokens[i].Type == Int {
+							for t[i].Type != Comma {
+								if t[i].Type == Int {
 
 									//convert to int
-									min, _ = strconv.Atoi(tokens[i].Value.(string))
+									min, _ = strconv.Atoi(t[i].Value.(string))
 								}
 								i++
 							}
-							for tokens[i].Type != CloseParen {
-								if tokens[i].Type == Int {
+							for t[i].Type != CloseParen {
+								if t[i].Type == Int {
 
 									//convert to int
-									max, _ = strconv.Atoi(tokens[i].Value.(string))
+									max, _ = strconv.Atoi(t[i].Value.(string))
 								}
 								i++
 							}
@@ -377,10 +384,41 @@ func getvalue(tokens []Token, i int, vars map[string]string, fun map[string][]To
 							randomNumber := rand.Intn(max+1-min) + min
 
 							s += strconv.Itoa(randomNumber)
-						} else if tokens[i].Value.(string) == "Read" {
+						} else if t[i].Value.(string) == "Read" {
 							i++
 							i++
 							s += lib.Read()
+						} else if t[i].Value.(string) == "ln" {
+							n := 0.0
+							for t[i].Type != OpenParen {
+								i++
+							}
+							i++
+							for t[i].Type != CloseParen {
+								if t[i].Type == Int || t[i].Type == String {
+									// Convert to float64
+									num, _ := getvalue(t, i, vars, fun)
+									n, _ = strconv.ParseFloat(num, 64)
+								}
+								i++
+							}
+							s += strconv.FormatFloat(math.Log(n), 'f', -1, 64)
+
+						} else if t[i].Value.(string) == "exp" {
+							n := 0.0
+							for t[i].Type != OpenParen {
+								i++
+							}
+							i++
+							for t[i].Type != CloseParen {
+								if t[i].Type == Int || t[i].Type == String {
+									// Convert to float64
+									num, _ := getvalue(t, i, vars, fun)
+									n, _ = strconv.ParseFloat(num, 64)
+								}
+								i++
+							}
+							s += strconv.FormatFloat(math.Exp(n), 'f', -1, 64)
 						}
 					}
 					i++
@@ -389,31 +427,31 @@ func getvalue(tokens []Token, i int, vars map[string]string, fun map[string][]To
 			// Extract the text content and return
 
 			return s, i
-		} else if tokens[i].Type == Int {
+		} else if t[i].Type == Int {
 			// If the token is an integer
 			numb := make(map[int]string)
 			numbs := 0
-			for tokens[i].Type != NewLine && tokens[i].Type != Comma && tokens[i].Type != CloseParen {
+			for t[i].Type != NewLine && t[i].Type != Comma && t[i].Type != CloseParen {
 				// Check if the token is a variable and replace it with its value
-				if tokens[i].Type == String {
+				if t[i].Type == String {
 
-					if _, exists := vars[tokens[i].Value.(string)]; exists {
-						tokens[i] = Token{Type: Int, Value: vars[tokens[i].Value.(string)]}
+					if _, exists := vars[t[i].Value.(string)]; exists {
+						t[i] = Token{Type: Int, Value: vars[t[i].Value.(string)]}
 					}
 				}
 
-				// Collect numeric tokens and operators
-				if tokens[i].Type == Int || tokens[i].Type == Plus || tokens[i].Type == Minus || tokens[i].Type == Multiply || tokens[i].Type == Divide {
-					if tokens[i].Type == Int {
-						numb[numbs] = tokens[i].Value.(string)
+				// Collect numeric t and operators
+				if t[i].Type == Int || t[i].Type == Plus || t[i].Type == Minus || t[i].Type == Multiply || t[i].Type == Divide {
+					if t[i].Type == Int {
+						numb[numbs] = t[i].Value.(string)
 					} else {
-						if tokens[i].Type == Plus {
+						if t[i].Type == Plus {
 							numb[numbs] = "+"
-						} else if tokens[i].Type == Minus {
+						} else if t[i].Type == Minus {
 							numb[numbs] = "-"
-						} else if tokens[i].Type == Multiply {
+						} else if t[i].Type == Multiply {
 							numb[numbs] = "*"
-						} else if tokens[i].Type == Divide {
+						} else if t[i].Type == Divide {
 							numb[numbs] = "/"
 						}
 					}
@@ -425,31 +463,31 @@ func getvalue(tokens []Token, i int, vars map[string]string, fun map[string][]To
 			// Evaluate the numeric expression and return the result as a string
 			res, _ := num.Evaluate(numb)
 			return strconv.FormatFloat(res, 'f', 6, 64), i
-		} else if tokens[i].Type == String {
+		} else if t[i].Type == String {
 			// If the token is a variable, replace it with its value
 
-			if _, exists := vars[tokens[i].Value.(string)]; exists {
-				return vars[tokens[i].Value.(string)], i
-			} else if tokens[i].Value.(string) == "Random" {
+			if _, exists := vars[t[i].Value.(string)]; exists {
+				return vars[t[i].Value.(string)], i
+			} else if t[i].Value.(string) == "Random" {
 				min := 0
 				max := 0
-				for tokens[i].Type != OpenParen {
+				for t[i].Type != OpenParen {
 					i++
 				}
 				i++
-				for tokens[i].Type != Comma {
-					if tokens[i].Type == Int {
+				for t[i].Type != Comma {
+					if t[i].Type == Int {
 
 						//convert to int
-						min, _ = strconv.Atoi(tokens[i].Value.(string))
+						min, _ = strconv.Atoi(t[i].Value.(string))
 					}
 					i++
 				}
-				for tokens[i].Type != CloseParen {
-					if tokens[i].Type == Int {
+				for t[i].Type != CloseParen {
+					if t[i].Type == Int {
 
 						//convert to int
-						max, _ = strconv.Atoi(tokens[i].Value.(string))
+						max, _ = strconv.Atoi(t[i].Value.(string))
 					}
 					i++
 				}
@@ -457,18 +495,49 @@ func getvalue(tokens []Token, i int, vars map[string]string, fun map[string][]To
 				randomNumber := rand.Intn(max+1-min) + min
 
 				return strconv.Itoa(randomNumber), i
-			} else if tokens[i].Value.(string) == "Read" {
+			} else if t[i].Value.(string) == "Read" {
 				i++
 				i++
 				return lib.Read(), i
+			} else if t[i].Value.(string) == "ln" {
+				n := 0.0
+				for t[i].Type != OpenParen {
+					i++
+				}
+				i++
+				for t[i].Type != CloseParen {
+					if t[i].Type == Int || t[i].Type == String {
+						// Convert to float64
+						num, _ := getvalue(t, i, vars, fun)
+						n, _ = strconv.ParseFloat(num, 64)
+					}
+					i++
+				}
+				return strconv.FormatFloat(math.Log(n), 'f', -1, 64), i
+
+			} else if t[i].Value.(string) == "exp" {
+				n := 0.0
+				for t[i].Type != OpenParen {
+					i++
+				}
+				i++
+				for t[i].Type != CloseParen {
+					if t[i].Type == Int || t[i].Type == String {
+						// Convert to float64
+						num, _ := getvalue(t, i, vars, fun)
+						n, _ = strconv.ParseFloat(num, 64)
+					}
+					i++
+				}
+				return strconv.FormatFloat(math.Exp(n), 'f', -1, 64), i
 			}
 		} else {
 		}
 
 		i++
 	}
-	if tokens[i].Type != NewLine && tokens[i-1].Type != Whitespace {
-		lib.Print("Unexpected token: \"" + tokens[i].Value.(string) + "\" on line " + strconv.Itoa(tokens[i].Line))
+	if t[i].Type != NewLine && t[i-1].Type != Whitespace {
+		lib.Print("Unexpected token: \"" + t[i].Value.(string) + "\" on line " + strconv.Itoa(t[i].Line))
 	}
 	return "", i
 }
@@ -625,6 +694,8 @@ func interpret(tokens []Token) {
 					// Initialize variables for function code extraction
 					i2 := 0
 					i3 := n
+					funcname := getname(in.tokens, n)
+					funcode := []Token{}
 
 					for in.tokens[i3].Type != OpenParen {
 						i3++
@@ -652,7 +723,7 @@ func interpret(tokens []Token) {
 
 					// Update indices and store the function code with its name
 					i2 += i22
-					fname := filename + "." + getname(in.tokens, i)
+					fname := filename + "." + funcname
 					n = i2
 					fun[fname] = funcode
 				}
@@ -836,7 +907,7 @@ func (c *code) Code(tokens []Token, fun map[string][]Token) string {
 				c2 := code{
 					vars: fvars1,
 				}
-				fun = funCopy
+				//fun = funCopy
 				// Execute the function code
 				c2.Code(funcp[tokens[i].Value.(string)], fun)
 				i = i3
