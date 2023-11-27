@@ -951,14 +951,26 @@ func main() {
 			//get if args exist
 			if len(os.Args) > 2 {
 				//get file path
+				file_path := ""
+				url := ""
 				executablePath, _ := os.Executable()
-				file_name, _ := lib.ExtractFileName(os.Args[2])
 				if _, err := os.Stat(filepath.Dir(executablePath) + "/" + "libs"); os.IsNotExist(err) {
 					os.Mkdir(filepath.Dir(executablePath)+"/"+"libs", 0755)
 				}
-				file_path := filepath.Dir(executablePath) + "/" + "libs/" + file_name
-				//get urlr
-				url := os.Args[2]
+
+				if os.Args[2] == "math" {
+					file_path = filepath.Dir(executablePath) + "/" + "libs/math.v"
+					//get url
+					url = "https://github.com/Lord-Jakub/Voca/blob/main/bin/libs/math.v"
+
+				} else {
+
+					file_name, _ := lib.ExtractFileName(os.Args[2])
+
+					file_path = filepath.Dir(executablePath) + "/" + "libs/" + file_name
+					//get urlr
+					url = os.Args[2]
+				}
 				//download file
 				lib.DownloadFile(file_path, url)
 			} else {
@@ -987,7 +999,7 @@ func main() {
 			i.lexer(input)
 			interpret(i.tokens)
 		} else if os.Args[1] == "version" {
-			lib.Print("Voca version 0.1.2")
+			lib.Print("Voca version 0.1.5")
 		}
 
 	} else {
