@@ -664,7 +664,7 @@ func interpret(tokens []Token) {
 			// If the token indicates an import statement
 			// Create a new Interpret instance for the imported file
 			in := Interpret{
-				KeyWords: []string{"print", "if", "var", "func", "while", "import", "return"},
+				KeyWords: []string{"print", "if", "var", "func", "while", "import", "return", "graphics.Init"},
 			}
 
 			// Move to the next token until a file path is found
@@ -859,6 +859,13 @@ func (c *code) Code(tokens []Token, fun map[string][]Token) string {
 				i++
 				val, _ := getvalue(tokens, i, c.vars, fun)
 				return val
+			case tokens[i].Value == "graphics.Init":
+				// If the keyword is "graphics.Init," initialize the graphics window
+				window, err := lib.Init("Ahoj", 800, 600)
+				if err != nil {
+					panic(err)
+				}
+				defer window.Quit()
 
 			}
 		case tokens[i].Type == String:
@@ -944,7 +951,7 @@ func main() {
 
 	i := Interpret{
 		tokens:   make([]Token, 0),
-		KeyWords: []string{"print", "if", "var", "func", "while", "import", "return"},
+		KeyWords: []string{"print", "if", "var", "func", "while", "import", "return", "graphics.Init"},
 	}
 	if len(os.Args) > 1 {
 		if os.Args[1] == "get" {
