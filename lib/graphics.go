@@ -1,61 +1,50 @@
 package lib
 
+// Graphics is a wrapper for raylib graphics library
 import (
-	"fmt"
-	"log"
-
-	"github.com/veandco/go-sdl2/sdl"
+	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
-type Window struct {
-	window *sdl.Window
+type Graphics struct {
+	WindowTitle string
+	ShouldClose bool
+	Image       rl.Texture2D
 }
 
-// Init inicializuje okno s danou šířkou, výškou a názvem.
-func Init(title string, width, height int32) (*Window, error) {
-	err := sdl.Init(uint32(sdl.INIT_EVERYTHING))
-	if err != nil {
-		return nil, fmt.Errorf("failed to initialize SDL: %v", err)
-	}
+// Init initializes the graphics context
+// x, y - window size
+// title - window title
 
-	window, err := sdl.CreateWindow(title, int32(sdl.WINDOWPOS_UNDEFINED), int32(sdl.WINDOWPOS_UNDEFINED), width, height, uint32(sdl.WINDOW_SHOWN))
-	if err != nil {
-		return nil, fmt.Errorf("failed to create window: %v", err)
-	}
+func Init(x, y int, title string) (*Graphics, error) {
+	rl.InitWindow(int32(x), int32(y), title)
+	rl.SetTargetFPS(60)
 
-	return &Window{window: window}, nil
+	return &Graphics{WindowTitle: title, ShouldClose: false}, nil
 }
 
-// DrawImage vykreslí daný obrázek na okno.
-func (w *Window) DrawImage(imagePath string) error {
-	surface, err := sdl.LoadBMP(imagePath)
-	if err != nil {
-		return fmt.Errorf("failed to load image: %v", err)
-	}
-	defer surface.Free()
+// DrawImage draws an image on the graphics context
+// imagePath - path to the image
+// x, y - position of the image on the screen
+func (g *Graphics) DrawImage(x, y int32, imagePath string) {
+	img := rl.LoadTexture(imagePath)
 
-	renderer, err := w.window.GetRenderer()
-	if err != nil {
-		return fmt.Errorf("failed to get renderer: %v", err)
-	}
+	rl.BeginDrawing()
+	rl.ClearBackground(rl.RayWhite)
 
-	texture, err := renderer.CreateTextureFromSurface(surface)
-	if err != nil {
-		return fmt.Errorf("failed to create texture: %v", err)
-	}
-	defer texture.Destroy()
+	// Vykreslení obrázku na grafický kontext
+	rl.DrawTexture(img, x, y, rl.RayWhite)
 
-	renderer2, err := w.window.GetRenderer()
-	if err != nil {
-		log.Fatalf("Failed to get renderer: %v", err)
-	}
-	renderer2.Present()
+	rl.EndDrawing()
 
-	return nil
 }
 
-// Quit ukončí SDL a okno.
-func (w *Window) Quit() {
-	w.window.Destroy()
-	sdl.Quit()
+// Update updates the graphics context
+func (g *Graphics) Update() {
+	g.ShouldClose = rl.WindowShouldClose()
+}
+
+// CloseWindow closes the graphics context
+func (g *Graphics) CloseWindow() {
+	rl.UnloadTexture(g.Image)
+	rl.CloseWindow()
 }

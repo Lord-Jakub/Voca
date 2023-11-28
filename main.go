@@ -14,6 +14,9 @@ import (
 	"unicode"
 )
 
+var g *lib.Graphics
+var kwrld []string = []string{"func", "var", "if", "while", "return", "print", "graphics.Init", "graphics.DrawImage"}
+
 // Create interpreter structure.
 type Interpret struct {
 	tokens   []Token
@@ -259,6 +262,13 @@ func getvalue(tokens []Token, i int, vars map[string]string, fun map[string][]To
 					}
 				} else if token.Value == "true" || token.Value == "false" {
 					return token.Value.(string), i
+
+				} else if token.Value == "isRunning" {
+					if g.ShouldClose {
+						return "false", i
+					} else {
+						return "true", i
+					}
 
 				} else if _, exists := fun[token.Value.(string)]; exists {
 					// Get the function arguments and prepare for function execution
@@ -664,7 +674,7 @@ func interpret(tokens []Token) {
 			// If the token indicates an import statement
 			// Create a new Interpret instance for the imported file
 			in := Interpret{
-				KeyWords: []string{"print", "if", "var", "func", "while", "import", "return", "graphics.Init"},
+				KeyWords: kwrld,
 			}
 
 			// Move to the next token until a file path is found
@@ -860,12 +870,94 @@ func (c *code) Code(tokens []Token, fun map[string][]Token) string {
 				val, _ := getvalue(tokens, i, c.vars, fun)
 				return val
 			case tokens[i].Value == "graphics.Init":
-				// If the keyword is "graphics.Init," initialize the graphics window
-				window, err := lib.Init("Ahoj", 800, 600)
-				if err != nil {
-					panic(err)
+				//get parameters
+				var x int
+				var y int
+				var title string
+				for tokens[i].Type != OpenParen {
+					i++
 				}
-				defer window.Quit()
+				i++
+				for tokens[i].Type != Comma {
+
+					if tokens[i].Type == String || tokens[i].Type == Int {
+						// Convert to float64
+						var xstring string
+						xstring, _ = getvalue(tokens, i, c.vars, fun)
+						x, _ = strconv.Atoi(xstring)
+					}
+
+					i++
+				}
+				i++
+				for tokens[i].Type != Comma {
+
+					if tokens[i].Type == String || tokens[i].Type == Int {
+						// Convert to float64
+						var xstring string
+						xstring, _ = getvalue(tokens, i, c.vars, fun)
+						y, _ = strconv.Atoi(xstring)
+					}
+
+					i++
+				}
+				i++
+
+				for tokens[i].Type != CloseParen {
+
+					if tokens[i].Type == String || tokens[i].Type == Text {
+						title, _ = getvalue(tokens, i, c.vars, fun)
+					}
+
+					i++
+				}
+				// If the keyword is "graphics.Init," initialize the graphics library
+
+				g, _ = lib.Init(x, y, title)
+			case tokens[i].Value == "graphics.DrawImage":
+				//get parameters
+				var x int
+				var y int
+				var title string
+				for tokens[i].Type != OpenParen {
+					i++
+				}
+				i++
+				for tokens[i].Type != Comma {
+
+					if tokens[i].Type == String || tokens[i].Type == Int {
+						// Convert to float64
+						var xstring string
+						xstring, _ = getvalue(tokens, i, c.vars, fun)
+						x, _ = strconv.Atoi(xstring)
+					}
+
+					i++
+				}
+				i++
+				for tokens[i].Type != Comma {
+
+					if tokens[i].Type == String || tokens[i].Type == Int {
+						// Convert to float64
+						var xstring string
+						xstring, _ = getvalue(tokens, i, c.vars, fun)
+						y, _ = strconv.Atoi(xstring)
+					}
+
+					i++
+				}
+				i++
+
+				for tokens[i].Type != CloseParen {
+
+					if tokens[i].Type == String || tokens[i].Type == Text {
+						title, _ = getvalue(tokens, i, c.vars, fun)
+					}
+
+					i++
+				}
+				// If the keyword is "graphics.DrawImage," initialize the graphics library
+				g.DrawImage(int32(x), int32(y), title)
 
 			}
 		case tokens[i].Type == String:
@@ -951,7 +1043,7 @@ func main() {
 
 	i := Interpret{
 		tokens:   make([]Token, 0),
-		KeyWords: []string{"print", "if", "var", "func", "while", "import", "return", "graphics.Init"},
+		KeyWords: kwrld,
 	}
 	if len(os.Args) > 1 {
 		if os.Args[1] == "get" {
