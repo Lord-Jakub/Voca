@@ -15,7 +15,7 @@ import (
 )
 
 var g *lib.Graphics
-var kwrld []string = []string{"func", "var", "if", "while", "return", "print", "graphics.Init", "graphics.DrawImage"}
+var kwrld []string = []string{"func", "var", "if", "while", "return", "print", "graphics.Init", "graphics.DrawImage", "graphics.Close", "graphics.Update"}
 
 // Create interpreter structure.
 type Interpret struct {
@@ -883,8 +883,10 @@ func (c *code) Code(tokens []Token, fun map[string][]Token) string {
 					if tokens[i].Type == String || tokens[i].Type == Int {
 						// Convert to float64
 						var xstring string
+						var xf float64
 						xstring, _ = getvalue(tokens, i, c.vars, fun)
-						x, _ = strconv.Atoi(xstring)
+						xf, _ = strconv.ParseFloat(xstring, 64)
+						x = int(xf)
 					}
 
 					i++
@@ -895,8 +897,10 @@ func (c *code) Code(tokens []Token, fun map[string][]Token) string {
 					if tokens[i].Type == String || tokens[i].Type == Int {
 						// Convert to float64
 						var xstring string
+						var xf float64
 						xstring, _ = getvalue(tokens, i, c.vars, fun)
-						y, _ = strconv.Atoi(xstring)
+						xf, _ = strconv.ParseFloat(xstring, 64)
+						y = int(xf)
 					}
 
 					i++
@@ -928,8 +932,10 @@ func (c *code) Code(tokens []Token, fun map[string][]Token) string {
 					if tokens[i].Type == String || tokens[i].Type == Int {
 						// Convert to float64
 						var xstring string
+						var xf float64
 						xstring, _ = getvalue(tokens, i, c.vars, fun)
-						x, _ = strconv.Atoi(xstring)
+						xf, _ = strconv.ParseFloat(xstring, 64)
+						x = int(xf)
 					}
 
 					i++
@@ -940,8 +946,10 @@ func (c *code) Code(tokens []Token, fun map[string][]Token) string {
 					if tokens[i].Type == String || tokens[i].Type == Int {
 						// Convert to float64
 						var xstring string
+						var xf float64
 						xstring, _ = getvalue(tokens, i, c.vars, fun)
-						y, _ = strconv.Atoi(xstring)
+						xf, _ = strconv.ParseFloat(xstring, 64)
+						y = int(xf)
 					}
 
 					i++
@@ -958,6 +966,30 @@ func (c *code) Code(tokens []Token, fun map[string][]Token) string {
 				}
 				// If the keyword is "graphics.DrawImage," initialize the graphics library
 				g.DrawImage(int32(x), int32(y), title)
+			case tokens[i].Value == "graphics.Close":
+				i++
+				i++
+				g.CloseWindow()
+			case tokens[i].Value == "graphics.Update":
+				i++
+				i++
+				g.Update()
+			case tokens[i].Value == "graphics.SetFPS":
+				i++
+				var x int
+				for tokens[i].Type != CloseParen {
+
+					if tokens[i].Type == String || tokens[i].Type == Text {
+						var xstring string
+						var xf float64
+						xstring, _ = getvalue(tokens, i, c.vars, fun)
+						xf, _ = strconv.ParseFloat(xstring, 64)
+						x = int(xf)
+					}
+
+					i++
+				}
+				g.SetFPS(x)
 
 			}
 		case tokens[i].Type == String:

@@ -37,6 +37,9 @@ func (g *Graphics) DrawImage(x, y int32, imagePath string) {
 	rl.EndDrawing()
 
 }
+func (g *Graphics) SetFPS(x int) {
+	rl.SetTargetFPS(int32(x))
+}
 
 // Update updates the graphics context
 func (g *Graphics) Update() {
