@@ -1168,7 +1168,7 @@ func main() {
 			i.lexer(input)
 			interpret(i.tokens)
 		} else if os.Args[1] == "version" {
-			lib.Print("Voca version 0.1.5")
+			lib.Print("Voca version 0.2.0")
 		}
 
 	} else {
