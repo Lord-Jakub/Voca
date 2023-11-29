@@ -10,9 +10,10 @@ Voca is a simple programming language, written in Go, which I am currently worki
  - [x] If and While
  - [x] Import other files written in Voce
  - [x] String concatenation
+ - [x] Possibility to create a GUI
  - [ ] Several simple libraries (e.g., library for advanced math
-       functions, etc.)
- - [ ] Possibility to create a GUI
+       functions, etc.) - in progress - working on math lib
+ 
 
 
 **How to setup:**
