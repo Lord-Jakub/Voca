@@ -264,10 +264,48 @@ func getvalue(tokens []Token, i int, vars map[string]string, fun map[string][]To
 					return token.Value.(string), i
 
 				} else if token.Value == "isRunning" {
+					i++
+					i++
 					if g.ShouldClose {
 						return "false", i
 					} else {
 						return "true", i
+					}
+
+				} else if token.Value == "graphics.KeyLeft" {
+					i++
+					i++
+					if g.KeyLeft {
+						return "true", i
+					} else {
+						return "false", i
+					}
+
+				} else if token.Value == "graphics.KeyRight" {
+					i++
+					i++
+					if g.KeyRight {
+						return "true", i
+					} else {
+						return "false", i
+					}
+
+				} else if token.Value == "graphics.KeyUp" {
+					i++
+					i++
+					if g.KeyUp {
+						return "true", i
+					} else {
+						return "false", i
+					}
+
+				} else if token.Value == "graphics.KeyDown" {
+					i++
+					i++
+					if g.KeyDown {
+						return "true", i
+					} else {
+						return "false", i
 					}
 
 				} else if _, exists := fun[token.Value.(string)]; exists {

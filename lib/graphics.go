@@ -9,6 +9,10 @@ type Graphics struct {
 	WindowTitle string
 	ShouldClose bool
 	Image       rl.Texture2D
+	KeyLeft     bool
+	KeyRight    bool
+	KeyUp       bool
+	KeyDown     bool
 }
 
 // Init initializes the graphics context
@@ -44,6 +48,10 @@ func (g *Graphics) SetFPS(x int) {
 // Update updates the graphics context
 func (g *Graphics) Update() {
 	g.ShouldClose = rl.WindowShouldClose()
+	g.KeyLeft = rl.IsKeyDown(rl.KeyLeft)
+	g.KeyRight = rl.IsKeyDown(rl.KeyRight)
+	g.KeyUp = rl.IsKeyDown(rl.KeyUp)
+	g.KeyDown = rl.IsKeyDown(rl.KeyDown)
 }
 
 // CloseWindow closes the graphics context
