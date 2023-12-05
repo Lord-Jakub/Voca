@@ -1137,7 +1137,7 @@ func main() {
 				if os.Args[2] == "math" {
 					file_path = filepath.Dir(executablePath) + "/" + "libs/math.v"
 					//get url
-					url = "https://github.com/Lord-Jakub/Voca/blob/main/bin/libs/math.v"
+					url = "https://raw.githubusercontent.com/Lord-Jakub/Voca/main/bin/libs/math.v"
 
 				} else {
 
@@ -1175,7 +1175,7 @@ func main() {
 			i.lexer(input)
 			interpret(i.tokens)
 		} else if os.Args[1] == "version" {
-			lib.Print("Voca version 0.2.0")
+			lib.Print("Voca version 0.2.1")
 		}
 
 	} else {
