@@ -15,7 +15,7 @@ import (
 )
 
 var g *lib.Graphics
-var kwrld []string = []string{"func", "var", "if", "while", "return", "print", "graphics.Init", "graphics.DrawImage", "graphics.Close", "graphics.Update"}
+var kwrld []string = []string{"func", "var", "if", "while", "return", "print", "graphics.Init", "graphics.DrawImage", "graphics.Close", "graphics.Update", "graphics.SetFPS"}
 
 // Create interpreter structure.
 type Interpret struct {
@@ -475,10 +475,17 @@ func getvalue(tokens []Token, i int, vars map[string]string, fun map[string][]To
 			// Extract the text content and return
 
 			return s, i
-		} else if t[i].Type == Int {
+		} else if (t[i].Type == Int) || (t[i].Type == Minus) {
 			// If the token is an integer
 			numb := make(map[int]string)
 			numbs := 0
+			if t[i].Type == Minus {
+				numb[numbs] = "-" + t[i+1].Value.(string) // Add the minus sign
+				numbs++
+				i++
+				i++
+			}
+
 			for t[i].Type != NewLine && t[i].Type != Comma && t[i].Type != CloseParen {
 				// Check if the token is a variable and replace it with its value
 				if t[i].Type == String {
@@ -639,8 +646,8 @@ func getbool(tokens []Token, i int, vars map[string]string, fun map[string][]Tok
 	// Get values from the token sets
 	val1, _ := getvalue(toks1, 0, vars, fun)
 	val2, _ := getvalue(toks2, 0, vars, fun)
-	val1i, _ := strconv.Atoi(val1)
-	val2i, _ := strconv.Atoi(val2)
+	val1i, _ := strconv.ParseFloat(val1, 64)
+	val2i, _ := strconv.ParseFloat(val2, 64)
 
 	// Compare values based on the operator and return the result
 	if (op == DoubleEqual) && (val1 == val2) {
